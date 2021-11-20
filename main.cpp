@@ -1,38 +1,42 @@
-// ---------------------------------------------------------------- //
-// Arduino Ultrasoninc Sensor HC-SR04
-// Re-writed by Arbi Abdul Jabbaar
-// Using Arduino IDE 1.8.7
-// Using HC-SR04 Module
-// Tested on 17 September 2019
-// ---------------------------------------------------------------- //
 
-int critical_zone = 15;
+int critical_zone = 30;
 int critical_zone_buzzer = 4;
 
-int warning_zone = 30;
+int warning_zone = 40;
 int warning_zone_Led = 5;
 
-#define warn_for 2000; // 2 seconds
-#define beep_for 2000; // 2 seconds
-
+#define alarm_time 2000;
+int temp_alrm_time = alarm_time;
+// temp_alrm_time = alarm_time;
 #define echoPin 2 // attach pin D2 Arduino to pin Echo of HC-SR04
-#define trigPin 3 //attach pin D3 Arduino to pin Trig of HC-SR04
+#define trigPin 3 // attach pin D3 Arduino to pin Trig of HC-SR04
 
 // defines variables
 long duration; // variable for the duration of sound wave travel
-int distance; // variable for the distance measurement
+int distance;  // variable for the distance measurement
 
 void setup() {
-   pinMode(warning_zone_Led, OUTPUT);
+  pinMode(warning_zone_Led, OUTPUT);
   pinMode(critical_zone_buzzer, OUTPUT);
   pinMode(trigPin, OUTPUT); // Sets the trigPin as an OUTPUT
-  pinMode(echoPin, INPUT); // Sets the echoPin as an INPUT
-  Serial.begin(9600); // // Serial Communication is starting with 9600 of baudrate speed
-  Serial.println("Ultrasonic Sensor HC-SR04 Test"); // print some text in Serial Monitor
+  pinMode(echoPin, INPUT);  // Sets the echoPin as an INPUT
+  Serial.begin(
+      9600); // // Serial Communication is starting with 9600 of baudrate speed
+  Serial.println(
+      "Ultrasonic Sensor HC-SR04 Test"); // print some text in Serial Monitor
   Serial.println("with Arduino UNO R3");
 }
 void loop() {
   // Clears the trigPin condition
+  update_distance();
+  Serial.print("Distance: ");
+  Serial.print(distance / 2.54);
+  Serial.println(" inches");
+  check_warning_distance();
+  check_critical_distance();
+  temp_alrm_time = alarm_time;
+}
+void update_distance() {
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
   // Sets the trigPin HIGH (ACTIVE) for 10 microseconds
@@ -42,34 +46,37 @@ void loop() {
   // Reads the echoPin, returns the sound wave travel time in microseconds
   duration = pulseIn(echoPin, HIGH);
   // Calculating the distance
-  distance = duration * 0.034 / 2; // Speed of sound wave divided by 2 (go and back)
+  distance = duration * 0.034 / 2;
   // Displays the distance on the Serial Monitor
-  Serial.print("Distance: ");
-  Serial.print(distance/2.54);
-  Serial.println(" inches");
-  
+}
+void check_critical_distance() {
+  update_distance();
+  if (distance < critical_zone) {
+    Serial.print("Critical distance");
+    beep();
+  }
+}
+void check_warning_distance() {
+  update_distance();
   if ((distance / 2.54) < warning_zone) {
-    Serial.println("If triggerd");
-    warning();
-    if (distance < critical_zone) {
-      beep();
+    Serial.print("warning distance");
+    // int temp_alrm_time = warn_for;
+    for (; temp_alrm_time > 0; temp_alrm_time -= 200) {
+      digitalWrite(warning_zone_Led, HIGH);
+      delay(100);
+      check_critical_distance();
+      digitalWrite(warning_zone_Led, LOW);
+      delay(100);
+      check_critical_distance();
     }
   }
 }
-void warning() {
-  int timer = warn_for;
-  for (; timer > 0; timer -= 400) {
-    digitalWrite(warning_zone_Led, HIGH);
-    delay(200);
-    digitalWrite(warning_zone_Led, LOW);
-    delay(200);
-  }
-}
 void beep() {
-  int timer = beep_for;
-  for (; timer > 0; timer -= 700) {
+  //   int temp_alrm_time = beep_for;
+  digitalWrite(warning_zone_Led, HIGH);
+  for (; temp_alrm_time > 0; temp_alrm_time -= 400) {
     digitalWrite(critical_zone_buzzer, HIGH);
-    delay(500);
+    delay(200);
     digitalWrite(critical_zone_buzzer, LOW);
     delay(200);
   }
