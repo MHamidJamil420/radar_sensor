@@ -8,18 +8,27 @@ int warning_zone_Led = 5;
 #define alarm_time 2000;
 int temp_alrm_time = alarm_time;
 // temp_alrm_time = alarm_time;
-#define echoPin 2  // attach pin D2 Arduino to pin Echo of HC-SR04
-#define trigPin 3  // attach pin D3 Arduino to pin Trig of HC-SR04
+#define echoPin 12 //  attach pin D2 Arduino to pin Echo of HC-SR04
+#define trigPin 11  // attach pin D3 Arduino to pin Trig of HC-SR04
+
+#define echoPin2 9 //  attach pin D2 Arduino to pin Echo of HC-SR04
+#define trigPin2 10  // attach pin D3 Arduino to pin Trig of HC-SR04
 
 // defines variables
 long duration;  // variable for the duration of sound wave travel
 int distance;   // variable for the distance measurement
+
+long duration2;  // variable for the duration of sound wave travel
+int distance2;   // variable for the distance measurement
 
 void setup() {
   pinMode(warning_zone_Led, OUTPUT);
   pinMode(critical_zone_buzzer, OUTPUT);
   pinMode(trigPin, OUTPUT);  // Sets the trigPin as an OUTPUT
   pinMode(echoPin, INPUT);   // Sets the echoPin as an INPUT
+
+  pinMode(trigPin2, OUTPUT);  // Sets the trigPin as an OUTPUT
+  pinMode(echoPin2, INPUT);   // Sets the echoPin as an INPUT
   Serial.begin(
     9600);  // // Serial Communication is starting with 9600 of baudrate speed
   Serial.println(
@@ -29,25 +38,39 @@ void setup() {
 void loop() {
   // Clears the trigPin condition
   update_distance();
-  Serial.print("Distance: ");
+  Serial.print("Distance 1 : ");
   Serial.print(distance / 2.54);
+  Serial.print(", Distance 2 : ");
+  Serial.print(distance2 / 2.54);
   Serial.println(" inches");
-  check_warning_distance();
-  check_critical_distance();
+//  check_warning_distance();
+//  check_critical_distance();2
   temp_alrm_time = alarm_time;
 }
 void update_distance() {
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
-  // Sets the trigPin HIGH (ACTIVE) for 10 microseconds
   digitalWrite(trigPin, HIGH);
   delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
-  // Reads the echoPin, returns the sound wave travel time in microseconds
   duration = pulseIn(echoPin, HIGH);
-  // Calculating the distance
   distance = duration * 0.034 / 2;
-  // Displays the distance on the Serial Monitor
+
+  digitalWrite(trigPin2, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin2, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin2, LOW);
+  duration2 = pulseIn(echoPin2, HIGH);
+  distance2 = duration2 * 0.034 / 2;
+
+}
+void check_critical_distance() {
+  update_distance();
+  if ((distance / 2.54) < critical_zone) {
+    Serial.print("Critical distance");
+    beep();
+  }
 }
 void check_critical_distance() {
   update_distance();
