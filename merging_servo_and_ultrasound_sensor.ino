@@ -12,7 +12,7 @@ int input_timeout = 10000;
 int critical_zone = 25;
 int critical_zone_buzzer = 4;
 
-int rotation_speed_delay = 20; // angle (++ or --) after (rotation_speed)ms
+int rotation_speed_delay = 100; // angle (++ or --) after (rotation_speed)ms
 // so increasing it will slow down rotation speed
 
 int warning_zone = 50;
@@ -61,7 +61,8 @@ void loop() {
       Serial.println("2: warning_zone ," + String(warning_zone));
       Serial.println("3: alarm_time ," + String(alarm_time));
       Serial.println("4: input_timeout ," + String(input_timeout));
-      Serial.println("5: rotation_speed_delay ," + String(rotation_speed_delay));
+      Serial.println("5: rotation_speed_delay ," +
+                     String(rotation_speed_delay));
 
       choice = getString().toInt();
       Serial.println("we got : " + String(choice));
@@ -101,6 +102,7 @@ void servoRotation() {
     delay(rotation_speed_delay);
     if (pos % display_reading_after == 0) {
       blynk(20);
+      Serial.print("Angle : " + String(pos)+" -> ");
       update_distance();
     }
   }
@@ -111,6 +113,7 @@ void servoRotation() {
     delay(rotation_speed_delay);
     if (pos % display_reading_after == 0) {
       blynk(20);
+      Serial.print("Angle : " + String(pos)+" -> ");
       update_distance();
     }
   }
@@ -132,11 +135,11 @@ void update_distance() {
   duration2 = pulseIn(echoPin2, HIGH);
   distance2 = duration2 * 0.034 / 2;
 
-  Serial.print("Distance 1 : ");
+  Serial.print("D1 : ");
   Serial.print(distance / 2.54);
-  Serial.print(", Distance 2 : ");
+  Serial.print(", D2 : ");
   Serial.print(distance2 / 2.54);
-  Serial.println(" inches");
+  Serial.println(" in");
 }
 void check_critical_distance() {
   update_distance();
