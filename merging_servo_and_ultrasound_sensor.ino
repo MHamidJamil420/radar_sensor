@@ -9,15 +9,17 @@ int pos;
 // Ultrasound start
 int critical_zone = 25;
 int critical_zone_buzzer = 4;
-
+int rotation_speed_delay = 20; // angle (++ or --) after (rotation_speed)ms
+// so increasing it will slow down rotation speed
 int warning_zone = 50;
 int warning_zone_Led = 6;
 
 #define alarm_time 2000;
 int temp_alrm_time = alarm_time;
-// int display_reading_after = ;
-#define echoPin 12 //  attach pin D2 Arduino to pin Echo of HC-SR04
-#define trigPin 11 // attach pin D3 Arduino to pin Trig of HC-SR04
+int display_reading_after = 18; //  (180/display_reading_after) = 10,
+                                //  so after 10 degree readings will be printed
+#define echoPin 12              //  attach pin D2 Arduino to pin Echo of HC-SR04
+#define trigPin 11              // attach pin D3 Arduino to pin Trig of HC-SR04
 
 #define echoPin2 9  //  attach pin D2 Arduino to pin Echo of HC-SR04
 #define trigPin2 10 // attach pin D3 Arduino to pin Trig of HC-SR04
@@ -30,6 +32,7 @@ int distance2;  // variable for the distance measurement
 // ultrasound end
 
 void setup() {
+   pinMode(LED_BUILTIN, OUTPUT);
   Myservo.attach(2);
   pinMode(warning_zone_Led, OUTPUT);
   pinMode(critical_zone_buzzer, OUTPUT);
@@ -48,26 +51,31 @@ void loop() {
   servoRotation();
   // Clears the trigPin condition
   update_distance();
-  Serial.print("Distance 1 : ");
-  Serial.print(distance / 2.54);
-  Serial.print(", Distance 2 : ");
-  Serial.print(distance2 / 2.54);
-  Serial.println(" inches");
+
   //  check_warning_distance();
   //  check_critical_distance();2
   temp_alrm_time = alarm_time;
 }
 void servoRotation() {
 
+  delay(300);
   for (pos = 0; pos <= 180; pos++) {
     Myservo.write(pos);
-    delay(7);
+    delay(rotation_speed_delay);
+    if (pos % display_reading_after == 0) {
+      blynk(20);
+      update_distance();
+    }
   }
-  delay(600);
+  delay(300);
 
   for (pos = 180; pos >= 0; pos--) {
     Myservo.write(pos);
-    delay(7);
+    delay(rotation_speed_delay);
+    if (pos % display_reading_after == 0) {
+      blynk(20);
+      update_distance();
+    }
   }
 }
 void update_distance() {
@@ -86,6 +94,12 @@ void update_distance() {
   digitalWrite(trigPin2, LOW);
   duration2 = pulseIn(echoPin2, HIGH);
   distance2 = duration2 * 0.034 / 2;
+
+  Serial.print("Distance 1 : ");
+  Serial.print(distance / 2.54);
+  Serial.print(", Distance 2 : ");
+  Serial.print(distance2 / 2.54);
+  Serial.println(" inches");
 }
 void check_critical_distance() {
   update_distance();
@@ -113,11 +127,22 @@ void check_warning_distance() {
 void beep() {
   //   int temp_alrm_time = beep_for;
   digitalWrite(warning_zone_Led, HIGH);
-  for (; temp_alrm_time > 0; temp_alrm_time -= 400) {
+  for (; temp_alrm_time > 0;
+       temp_alrm_time -= 400) { // decrement should be 100 (50(HIGH)+50(LOW))
+                                // but i use 400 to finish it earlier
     digitalWrite(critical_zone_buzzer, HIGH);
-    delay(200);
+    delay(50);
     digitalWrite(critical_zone_buzzer, LOW);
-    delay(200);
+    delay(50);
   }
   digitalWrite(warning_zone_Led, LOW);
+}
+void blynk(int defined_delay) {
+   digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+  delay(defined_delay);                       // wait for a second
+  digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
+  // delay(1000);    
+  // digitalWrite(warning_zone_Led, HIGH);
+  // delay(defined_delay);
+  // digitalWrite(warning_zone_Led, LOW);
 }
