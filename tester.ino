@@ -159,7 +159,9 @@ void loop() {
 }
 void servoRotation() {
 
-  delay(300);
+  if (servo_Rotaion) {
+    delay(300);
+  }
   for (pos = 0; pos <= 180; pos++) {
     if (Serial.available() >= 1) {
       choice = Serial.parseInt();
@@ -179,7 +181,9 @@ void servoRotation() {
       update_distance(true);
     }
   }
-  delay(300);
+  if (servo_Rotaion) {
+    delay(300);
+  }
 
   for (pos = 180; pos >= 0; pos--) {
     if (Serial.available() >= 1) {
