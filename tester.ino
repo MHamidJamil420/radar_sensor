@@ -62,6 +62,18 @@ void loop() {
 
       choice = getString().toInt();
       Serial.println("we got : " + String(choice));
+      if (choice == 1) {
+        // Serial.println("old value : " + String(critical_zone));
+        choise_handler(&critical_zone);
+        // Serial.println("new value: " + String(critical_zone));
+      } else if (choice == 2) {
+        choise_handler(&warning_zone);
+      } else if (choice == 3) {
+        choise_handler(&alarm_time);
+      } else if (choice == 4) {
+        choise_handler(&input_timeout);
+      }
+
       // if (choice == 1) {
       //   Serial.println("Old value of critical_zone = " + critical_zone);
       //   Serial.println("Enter new value : ");
@@ -199,4 +211,13 @@ String getString() {
     // }
   }
   return sdata;
+}
+void choise_handler(int *p) {
+  Serial.print("Enter new value : ");
+  int newvalue = getString().toInt();
+  Serial.println(newvalue);
+  Serial.print("Value Changed : " + String(*p) + "-->");
+  *p = newvalue;
+  Serial.println(String(*p));
+  // Serial.println("new value : " + String(*p));
 }
