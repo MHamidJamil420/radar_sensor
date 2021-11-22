@@ -5,7 +5,9 @@ Servo Myservo;
 int pos;
 
 // servo end
-
+int choice = 0;
+int delayed = 10;
+int input_timeout = 10000;
 // Ultrasound start
 int critical_zone = 25;
 int critical_zone_buzzer = 4;
@@ -14,7 +16,7 @@ int rotation_speed_delay = 20; // angle (++ or --) after (rotation_speed)ms
 int warning_zone = 50;
 int warning_zone_Led = 6;
 
-#define alarm_time 2000;
+int alarm_time = 2000;
 int temp_alrm_time = alarm_time;
 int display_reading_after = 18; //  (180/display_reading_after) = 10,
                                 //  so after 10 degree readings will be printed
@@ -32,7 +34,7 @@ int distance2;  // variable for the distance measurement
 // ultrasound end
 
 void setup() {
-   pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(LED_BUILTIN, OUTPUT);
   Myservo.attach(2);
   pinMode(warning_zone_Led, OUTPUT);
   pinMode(critical_zone_buzzer, OUTPUT);
@@ -48,6 +50,25 @@ void setup() {
   Serial.println("with Arduino UNO R3");
 }
 void loop() {
+  if (Serial.available() >= 1) {
+    choice = Serial.parseInt();
+    if (choice != 0) {
+      Serial.println("Changing setting....");
+      Serial.println("Avaiable variable to change : ");
+      Serial.println("1: critical_zone");
+      Serial.println("2: warning_zone");
+      Serial.println("3: alarm_time ");
+      Serial.println("4: input_timeout ");
+
+      choice = getString().toInt();
+      Serial.println("we got : " + choice);
+      // if (choice == 1) {
+      //   Serial.println("Old value of critical_zone = " + critical_zone);
+      //   Serial.println("Enter new value : ");
+      //   choice = getint();
+      // }
+    }
+  }
   servoRotation();
   // Clears the trigPin condition
   update_distance();
@@ -138,11 +159,43 @@ void beep() {
   digitalWrite(warning_zone_Led, LOW);
 }
 void blynk(int defined_delay) {
-   digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
-  delay(defined_delay);                       // wait for a second
-  digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
-  // delay(1000);    
+  digitalWrite(LED_BUILTIN,
+               HIGH);             // turn the LED on (HIGH is the voltage level)
+  delay(defined_delay);           // wait for a second
+  digitalWrite(LED_BUILTIN, LOW); // turn the LED off by making the voltage LOW
+  // delay(1000);
   // digitalWrite(warning_zone_Led, HIGH);
   // delay(defined_delay);
   // digitalWrite(warning_zone_Led, LOW);
+}
+String getString() {
+  String sdata = "";
+  char ch = '0';
+  bool condit = true;
+  while (condit) {
+    // if (Serial.available() > 0)
+    // {
+    ch = Serial.read(); // get the character
+    delay(20);
+    if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
+        (ch >= '0' && ch <= '9') || (ch == '=')) {
+      sdata += ch;
+    } else if (ch == '!') {
+      Serial.print("Bypassed");
+      loop();
+    } else if (ch == '~') {
+      Serial.print("Sr we got ");
+      Serial.print(sdata);
+      condit = false;
+      // FileNameLoop = sdata;
+    } else if (ch == '`') {
+      Serial.print("Str cleared\n");
+      sdata = "";
+      // Print(sdata);
+      // condit = false;
+      // FileNameLoop = sdata;
+    }
+    // }
+  }
+  return sdata;
 }
