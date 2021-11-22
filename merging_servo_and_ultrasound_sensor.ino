@@ -11,8 +11,10 @@ int input_timeout = 10000;
 // Ultrasound start
 int critical_zone = 25;
 int critical_zone_buzzer = 4;
+
 int rotation_speed_delay = 20; // angle (++ or --) after (rotation_speed)ms
 // so increasing it will slow down rotation speed
+
 int warning_zone = 50;
 int warning_zone_Led = 6;
 
@@ -55,13 +57,27 @@ void loop() {
     if (choice != 0) {
       Serial.println("Changing setting....");
       Serial.println("Avaiable variable to change : ");
-      Serial.println("1: critical_zone");
-      Serial.println("2: warning_zone");
-      Serial.println("3: alarm_time ");
-      Serial.println("4: input_timeout ");
+      Serial.println("1: critical_zone ," + String(critical_zone));
+      Serial.println("2: warning_zone ," + String(warning_zone));
+      Serial.println("3: alarm_time ," + String(alarm_time));
+      Serial.println("4: input_timeout ," + String(input_timeout));
+      Serial.println("5: rotation_speed_delay ," + String(rotation_speed_delay));
 
       choice = getString().toInt();
-      Serial.println("we got : " + choice);
+      Serial.println("we got : " + String(choice));
+      if (choice == 1) {
+        // Serial.println("old value : " + String(critical_zone));
+        choise_handler(&critical_zone);
+        // Serial.println("new value: " + String(critical_zone));
+      } else if (choice == 2) {
+        choise_handler(&warning_zone);
+      } else if (choice == 3) {
+        choise_handler(&alarm_time);
+      } else if (choice == 4) {
+        choise_handler(&input_timeout);
+      } else if (choice == 5) {
+        choise_handler(&rotation_speed_delay);
+      }
       // if (choice == 1) {
       //   Serial.println("Old value of critical_zone = " + critical_zone);
       //   Serial.println("Enter new value : ");
@@ -173,6 +189,7 @@ String getString() {
   char ch = '0';
   bool condit = true;
   while (condit) {
+
     // if (Serial.available() > 0)
     // {
     ch = Serial.read(); // get the character
@@ -181,15 +198,16 @@ String getString() {
         (ch >= '0' && ch <= '9') || (ch == '=')) {
       sdata += ch;
     } else if (ch == '!') {
-      Serial.print("Bypassed");
+      Serial.println("Bypassed");
       loop();
-    } else if (ch == '~') {
-      Serial.print("Sr we got ");
-      Serial.print(sdata);
+    } else if (ch == '.') {
+      // Serial.print("Sr we got ");
+      // Serial.println(sdata);
       condit = false;
+      delay(100);
       // FileNameLoop = sdata;
-    } else if (ch == '`') {
-      Serial.print("Str cleared\n");
+    } else if (ch == ',') {
+      Serial.println("Str cleared\n");
       sdata = "";
       // Print(sdata);
       // condit = false;
@@ -198,4 +216,13 @@ String getString() {
     // }
   }
   return sdata;
+}
+void choise_handler(int *p) {
+  Serial.print("Enter new value : ");
+  int newvalue = getString().toInt();
+  Serial.println(newvalue);
+  Serial.print("Value Changed : " + String(*p) + "-->");
+  *p = newvalue;
+  Serial.println(String(*p));
+  // Serial.println("new value : " + String(*p));
 }
