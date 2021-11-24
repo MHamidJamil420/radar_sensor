@@ -3,7 +3,12 @@
 #include <Servo.h>
 Servo Myservo;
 int pos;
-
+bool ArraysInitialized = false;
+bool warningLED = false;
+bool BuzzerBeeping = true;
+bool servo_Rotaion = true;
+int d1[19];
+int d2[19];
 // servo end
 int choice = 0;
 int delayed = 10;
@@ -12,7 +17,7 @@ int input_timeout = 10000;
 int critical_zone = 25;
 int critical_zone_buzzer = 4;
 
-int rotation_speed_delay = 100; // angle (++ or --) after (rotation_speed)ms
+int rotation_speed_delay = 30; // angle (++ or --) after (rotation_speed)ms
 // so increasing it will slow down rotation speed
 
 int warning_zone = 50;
@@ -20,7 +25,7 @@ int warning_zone_Led = 6;
 
 int alarm_time = 2000;
 int temp_alrm_time = alarm_time;
-int display_reading_after = 18; //  (180/display_reading_after) = 10,
+int display_reading_after = 10; //  (180/display_reading_after) = x,(18)
                                 //  so after 10 degree readings will be printed
 #define echoPin 12              //  attach pin D2 Arduino to pin Echo of HC-SR04
 #define trigPin 11              // attach pin D3 Arduino to pin Trig of HC-SR04
@@ -35,6 +40,92 @@ long duration2; // variable for the duration of sound wave travel
 int distance2;  // variable for the distance measurement
 // ultrasound end
 
+void inputHandler(int choice) {
+  Serial.println("input Handler call");
+  // choice = Serial.parseInt();
+  // choice = getString().toInt();
+  if (choice == 1) {
+    Serial.println("Changing setting....");
+    Serial.println("Avaiable variable to change : ");
+    Serial.println("1: critical_zone ," + String(critical_zone));
+    Serial.println("2: warning_zone ," + String(warning_zone));
+    Serial.println("3: alarm_time ," + String(alarm_time));
+    Serial.println("4: input_timeout ," + String(input_timeout));
+    Serial.println("5: rotation_speed_delay ," + String(rotation_speed_delay));
+    // Serial.println("6: display_reading_after ," +
+    // String(display_reading_after));
+
+    choice = getString().toInt();
+    Serial.println("we got : " + String(choice));
+    if (choice == 1) {
+      // Serial.println("old value : " + String(critical_zone));
+      choise_handler(&critical_zone);
+      // Serial.println("new value: " + String(critical_zone));
+    } else if (choice == 2) {
+      choise_handler(&warning_zone);
+    } else if (choice == 3) {
+      choise_handler(&alarm_time);
+    } else if (choice == 4) {
+      choise_handler(&input_timeout);
+    } else if (choice == 5) {
+      choise_handler(&rotation_speed_delay);
+    }
+    // if (choice == 1) {
+    //   Serial.println("Old value of critical_zone = " + critical_zone);
+    //   Serial.println("Enter new value : ");
+    //   choice = getint();
+    // }
+  } else if (choice == 2) {
+    Serial.println("Direct call...");
+    Serial.println("Enter 1 for LED  ");
+    Serial.println("Enter 2 for Buzzer ");
+    Serial.println("Enter 3 for Servo operations ");
+    choice = getString().toInt();
+    if (choice == 1) {
+      Serial.println("Enter 1 enable warning led blynk ");
+      Serial.println("Enter 2 disable warning led blynk ");
+      Serial.println("Enter 3 Turn LED on ");
+      Serial.println("Enter 4 Turn LED off ");
+      choice = getString().toInt();
+      if (choice == 1) {
+        warningLED = true;
+      } else if (choice == 2) {
+        warningLED = false;
+      } else if (choice == 3) {
+        digitalWrite(warning_zone_Led, HIGH);
+      } else if (choice == 4) {
+        digitalWrite(warning_zone_Led, LOW);
+      }
+    } else if (choice == 2) {
+      Serial.println("Enter 1 to Turn Buzzer on ");
+      Serial.println("Enter 2 to turn onbeeping  ");
+      Serial.println("Enter 3 to force off Buzzer  ");
+      choice = getString().toInt();
+      if (choice == 1) {
+        Serial.println("Enter delay time ");
+        choice = getString().toInt();
+        digitalWrite(critical_zone_buzzer, HIGH);
+        delay(choice);
+        digitalWrite(critical_zone_buzzer, LOW);
+      } else if (choice == 2) {
+        BuzzerBeeping = true;
+      } else if (choice == 3) {
+        BuzzerBeeping = false;
+      }
+    } else if (choice == 3) {
+      Serial.println("Enter 1 to stop servo_Rotaion");
+      Serial.println("Enter 2 to Start servo_Rotaion");
+      choice = getString().toInt();
+      if (choice == 1) {
+        servo_Rotaion = false;
+      } else if (choice == 2) {
+        servo_Rotaion = true;
+      }
+    }
+  }
+  choice = 0;
+  Serial.println("Handler out");
+}
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   Myservo.attach(2);
@@ -54,41 +145,13 @@ void setup() {
 void loop() {
   if (Serial.available() >= 1) {
     choice = Serial.parseInt();
-    if (choice != 0) {
-      Serial.println("Changing setting....");
-      Serial.println("Avaiable variable to change : ");
-      Serial.println("1: critical_zone ," + String(critical_zone));
-      Serial.println("2: warning_zone ," + String(warning_zone));
-      Serial.println("3: alarm_time ," + String(alarm_time));
-      Serial.println("4: input_timeout ," + String(input_timeout));
-      Serial.println("5: rotation_speed_delay ," +
-                     String(rotation_speed_delay));
-
-      choice = getString().toInt();
-      Serial.println("we got : " + String(choice));
-      if (choice == 1) {
-        // Serial.println("old value : " + String(critical_zone));
-        choise_handler(&critical_zone);
-        // Serial.println("new value: " + String(critical_zone));
-      } else if (choice == 2) {
-        choise_handler(&warning_zone);
-      } else if (choice == 3) {
-        choise_handler(&alarm_time);
-      } else if (choice == 4) {
-        choise_handler(&input_timeout);
-      } else if (choice == 5) {
-        choise_handler(&rotation_speed_delay);
-      }
-      // if (choice == 1) {
-      //   Serial.println("Old value of critical_zone = " + critical_zone);
-      //   Serial.println("Enter new value : ");
-      //   choice = getint();
-      // }
+    if (choice >= 1) {
+      inputHandler(choice);
     }
   }
   servoRotation();
   // Clears the trigPin condition
-  update_distance();
+  update_distance(false);
 
   //  check_warning_distance();
   //  check_critical_distance();2
@@ -96,29 +159,70 @@ void loop() {
 }
 void servoRotation() {
 
-  delay(300);
+  if (servo_Rotaion) {
+    delay(300);
+  }
   for (pos = 0; pos <= 180; pos++) {
-    Myservo.write(pos);
-    delay(rotation_speed_delay);
+    if (Serial.available() >= 1) {
+      choice = Serial.parseInt();
+      if (choice >= 1) {
+        inputHandler(choice);
+      }
+    }
+    if (servo_Rotaion) {
+      Myservo.write(pos);
+      delay(rotation_speed_delay);
+    }
     if (pos % display_reading_after == 0) {
       blynk(20);
-      Serial.print("Angle : " + String(pos)+" -> ");
-      update_distance();
+      if (servo_Rotaion) {
+        Serial.print("Angle : " + String(pos) + " -> ");
+      }
+      update_distance(true);
     }
   }
-  delay(300);
-
+  if (servo_Rotaion) {
+    delay(300);
+  }
   for (pos = 180; pos >= 0; pos--) {
-    Myservo.write(pos);
-    delay(rotation_speed_delay);
+    if (Serial.available() >= 1) {
+      choice = Serial.parseInt();
+      if (choice >= 1) {
+        inputHandler(choice);
+      }
+    }
+    if (servo_Rotaion) {
+      Myservo.write(pos);
+      delay(rotation_speed_delay);
+    }
     if (pos % display_reading_after == 0) {
       blynk(20);
-      Serial.print("Angle : " + String(pos)+" -> ");
-      update_distance();
+      if (servo_Rotaion) {
+        Serial.print("Angle : " + String(pos) + " -> ");
+      }
+      update_distance(true);
     }
+  }
+  if (!ArraysInitialized) {
+    ArraysInitialized = true;
+    Serial.println("data in array is");
+
+    int ijk = 0;
+    Serial.print("D1 : ");
+    for (; ijk < 18; ijk++) {
+      Serial.print(String(d1[ijk])+",");
+    }
+    Serial.println("");
+
+    ijk = 0;
+    Serial.print("D2 : ");
+    for (; ijk < 18; ijk++) {
+      Serial.print(String(d2[ijk])+",");
+    }
+    Serial.println("");
   }
 }
-void update_distance() {
+void update_distance(bool check) {
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
   digitalWrite(trigPin, HIGH);
@@ -140,17 +244,23 @@ void update_distance() {
   Serial.print(", D2 : ");
   Serial.print(distance2 / 2.54);
   Serial.println(" in");
+
+  if (!ArraysInitialized && check) { // initializing arrays
+    // Serial.print("Angle : " + String(pos));
+    // Serial.println(", index : " + String(pos / display_reading_after));
+    d1[pos / display_reading_after] = (distance / 2.54);
+    d2[pos / display_reading_after] = (distance2 / 2.54);
+  }
 }
 void check_critical_distance() {
-  update_distance();
+  update_distance(false);
   if ((distance / 2.54) < critical_zone) {
     Serial.print("Critical distance");
     beep();
   }
 }
-
 void check_warning_distance() {
-  update_distance();
+  update_distance(false);
   if ((distance / 2.54) < warning_zone) {
     Serial.print("warning distance");
     // int temp_alrm_time = warn_for;
@@ -169,8 +279,10 @@ void beep() {
   digitalWrite(warning_zone_Led, HIGH);
   for (; temp_alrm_time > 0;
        temp_alrm_time -= 400) { // decrement should be 100 (50(HIGH)+50(LOW))
-                                // but i use 400 to finish it earlier
-    digitalWrite(critical_zone_buzzer, HIGH);
+    // but i use 400 to finish it earlier
+    if (BuzzerBeeping) {
+      digitalWrite(critical_zone_buzzer, HIGH);
+    }
     delay(50);
     digitalWrite(critical_zone_buzzer, LOW);
     delay(50);
@@ -183,9 +295,11 @@ void blynk(int defined_delay) {
   delay(defined_delay);           // wait for a second
   digitalWrite(LED_BUILTIN, LOW); // turn the LED off by making the voltage LOW
   // delay(1000);
-  // digitalWrite(warning_zone_Led, HIGH);
-  // delay(defined_delay);
-  // digitalWrite(warning_zone_Led, LOW);
+  if (warningLED) {
+    digitalWrite(warning_zone_Led, HIGH);
+    delay(defined_delay);
+    digitalWrite(warning_zone_Led, LOW);
+  }
 }
 String getString() {
   String sdata = "";
