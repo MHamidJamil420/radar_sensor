@@ -7,8 +7,8 @@ bool ArraysInitialized = false;
 bool warningLED = false;
 bool BuzzerBeeping = true;
 bool servo_Rotaion = true;
-int d1[18];
-int d2[18];
+int d1[19];
+int d2[19];
 // servo end
 int choice = 0;
 int delayed = 10;
@@ -17,7 +17,7 @@ int input_timeout = 10000;
 int critical_zone = 25;
 int critical_zone_buzzer = 4;
 
-int rotation_speed_delay = 100; // angle (++ or --) after (rotation_speed)ms
+int rotation_speed_delay = 30; // angle (++ or --) after (rotation_speed)ms
 // so increasing it will slow down rotation speed
 
 int warning_zone = 50;
@@ -25,7 +25,7 @@ int warning_zone_Led = 6;
 
 int alarm_time = 2000;
 int temp_alrm_time = alarm_time;
-int display_reading_after = 10; //  (180/display_reading_after) = 10,
+int display_reading_after = 10; //  (180/display_reading_after) = x,(18)
                                 //  so after 10 degree readings will be printed
 #define echoPin 12              //  attach pin D2 Arduino to pin Echo of HC-SR04
 #define trigPin 11              // attach pin D3 Arduino to pin Trig of HC-SR04
@@ -184,7 +184,6 @@ void servoRotation() {
   if (servo_Rotaion) {
     delay(300);
   }
-
   for (pos = 180; pos >= 0; pos--) {
     if (Serial.available() >= 1) {
       choice = Serial.parseInt();
@@ -194,7 +193,6 @@ void servoRotation() {
     }
     if (servo_Rotaion) {
       Myservo.write(pos);
-      // pos++;
       delay(rotation_speed_delay);
     }
     if (pos % display_reading_after == 0) {
@@ -204,6 +202,24 @@ void servoRotation() {
       }
       update_distance(true);
     }
+  }
+  if (!ArraysInitialized) {
+    ArraysInitialized = true;
+    Serial.println("data in array is");
+
+    int ijk = 0;
+    Serial.print("D1 : ");
+    for (; ijk < 18; ijk++) {
+      Serial.print(String(d1[ijk])+",");
+    }
+    Serial.println("");
+
+    ijk = 0;
+    Serial.print("D2 : ");
+    for (; ijk < 18; ijk++) {
+      Serial.print(String(d2[ijk])+",");
+    }
+    Serial.println("");
   }
 }
 void update_distance(bool check) {
@@ -228,10 +244,13 @@ void update_distance(bool check) {
   Serial.print(", D2 : ");
   Serial.print(distance2 / 2.54);
   Serial.println(" in");
-  // if (!ArraysInitialized && check) { // initializing arrays
-  //   d1[pos / display_reading_after] = (distance / 2.54);
-  //   d2[pos / display_reading_after] = (distance2 / 2.54);
-  // }
+
+  if (!ArraysInitialized && check) { // initializing arrays
+    // Serial.print("Angle : " + String(pos));
+    // Serial.println(", index : " + String(pos / display_reading_after));
+    d1[pos / display_reading_after] = (distance / 2.54);
+    d2[pos / display_reading_after] = (distance2 / 2.54);
+  }
 }
 void check_critical_distance() {
   update_distance(false);
@@ -240,7 +259,6 @@ void check_critical_distance() {
     beep();
   }
 }
-
 void check_warning_distance() {
   update_distance(false);
   if ((distance / 2.54) < warning_zone) {
