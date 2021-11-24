@@ -122,6 +122,18 @@ void inputHandler(int choice) {
         servo_Rotaion = true;
       }
     }
+  } else if (choice == 4) {
+    Serial.println("Displaying array data : ");
+    int alfa = 0;
+    // Serial.print("Data of Array 1");
+    Serial.println("Angle , Distance 1 | Distance 2");
+    for (; alfa < 19; alfa++) {
+      Serial.println(
+          manage_spacing(String(alfa), 3) + manage_spacing("-->", 6) +
+          manage_spacing(String(d1[alfa]), 7) + manage_spacing("|", 8) +
+          manage_spacing(String(d2[alfa]), 5));
+    }
+    Serial.println("");
   }
   choice = 0;
   Serial.println("Handler out");
@@ -210,14 +222,14 @@ void servoRotation() {
     int ijk = 0;
     Serial.print("D1 : ");
     for (; ijk < 18; ijk++) {
-      Serial.print(String(d1[ijk])+",");
+      Serial.print(String(d1[ijk]) + ",");
     }
     Serial.println("");
 
     ijk = 0;
     Serial.print("D2 : ");
     for (; ijk < 18; ijk++) {
-      Serial.print(String(d2[ijk])+",");
+      Serial.print(String(d2[ijk]) + ",");
     }
     Serial.println("");
   }
@@ -342,4 +354,48 @@ void choise_handler(int *p) {
   *p = newvalue;
   Serial.println(String(*p));
   // Serial.println("new value : " + String(*p));
+}
+String manage_spacing(String tempstring, int allotmentSize) {
+  // int strLength = tempstring.length();
+  String managedString = "";
+  if ((allotmentSize - tempstring.length()) % 2 == 0) {
+    // _ _ ali _ _ , incase if space is even
+
+    // allotmentSize - tempstring.length()
+    // Serial.print("")
+    int spaces = (allotmentSize - tempstring.length()) / 2;
+    for (; spaces > 0; --spaces) {
+      // Serial.print(" ");
+      managedString += " ";
+    }
+
+    // Serial.print(tempstring);
+    managedString += tempstring;
+    spaces = (allotmentSize - tempstring.length()) / 2;
+    for (; spaces > 0; --spaces) {
+      // Serial.print(" ");
+      managedString += " ";
+    }
+    // Serial.println("");
+  } else if ((allotmentSize - tempstring.length()) % 2 != 0) {
+    // incase if spaces are odd - - ali - - -
+    int spaces = (allotmentSize - tempstring.length()) / 2;
+    for (; spaces > 0; --spaces) {
+      // Serial.print(" ");
+      managedString += " ";
+    }
+
+    // Serial.print(tempstring);
+    managedString += tempstring;
+
+    spaces = ((allotmentSize - tempstring.length()) / 2) + 1;
+    for (; spaces > 0; --spaces) {
+      // Serial.print(" ");
+      managedString += " ";
+    }
+    // Serial.println("");
+  } else {
+    Serial.println("Undefined error");
+  }
+  return managedString;
 }
