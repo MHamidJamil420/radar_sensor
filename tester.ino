@@ -13,6 +13,13 @@ int d2[19];
 int choice = 0;
 int delayed = 10;
 int input_timeout = 10000;
+int neglectableDistance = 2; // IN INCHES
+int reinitializationProcess = 0;
+// 0 just initialize new distance to array after flashings (recommended 1)
+// 1 just initialize new distance to array after BuzzerBeeping (recommended 2)
+// 2 dont initialize just flashings
+// 3 beep and flash dont initialize
+
 // Ultrasound start
 int critical_zone = 25;
 int critical_zone_buzzer = 4;
@@ -52,6 +59,9 @@ void inputHandler(int choice) {
     Serial.println("3: alarm_time ," + String(alarm_time));
     Serial.println("4: input_timeout ," + String(input_timeout));
     Serial.println("5: rotation_speed_delay ," + String(rotation_speed_delay));
+    Serial.println("6: neglectableDistance ," + String(neglectableDistance));
+    Serial.println("7: reinitializationProcess ," +
+                   String(reinitializationProcess));
     // Serial.println("6: display_reading_after ," +
     // String(display_reading_after));
 
@@ -69,6 +79,10 @@ void inputHandler(int choice) {
       choise_handler(&input_timeout);
     } else if (choice == 5) {
       choise_handler(&rotation_speed_delay);
+    } else if (choice == 6) {
+      choise_handler(&neglectableDistance);
+    } else if (choice == 7) {
+      choise_handler(&reinitializationProcess);
     }
     // if (choice == 1) {
     //   Serial.println("Old value of critical_zone = " + critical_zone);
@@ -262,6 +276,11 @@ void update_distance(bool check) {
     // Serial.println(", index : " + String(pos / display_reading_after));
     d1[pos / display_reading_after] = (distance / 2.54);
     d2[pos / display_reading_after] = (distance2 / 2.54);
+  } else if (ArraysInitialized && check) { // Checking if position changed
+
+    distanceChangeHandler(d1, distance, 1);
+    // sending array as a pointer,distance of that array and there number.
+    distanceChangeHandler(d2, distance2, 2);
   }
 }
 void check_critical_distance() {
@@ -398,4 +417,34 @@ String manage_spacing(String tempstring, int allotmentSize) {
     Serial.println("Undefined error");
   }
   return managedString;
+}
+// 0 just initialize new distance to array after flashings (recommended 1)
+// 1 just initialize new distance to array after BuzzerBeeping (recommended 2)
+// 2 dont initialize just flashings
+// 3 beep and flash dont initialize
+void distanceChangeHandler(int *array, int dist, int arrNum) {
+  // if (((int)(dist / 2.54) >=
+  //      array[pos / display_reading_after] - neglectableDistance) &&
+  //     (((int)(dist / 2.54) >=
+  //       array[pos / display_reading_after] + neglectableDistance)))
+  if ((int)(dist / 2.54) >=
+      array[pos / display_reading_after] - neglectableDistance) {
+    Serial.println("Distance changed across Sensor " + String(arrNum) + " !");
+    Serial.println(
+        "Previous distance : " + String(array[pos / display_reading_after]) +
+        " New distance : " + String(dist / 2.54) +
+        " At Angle : " + String(pos));
+    if (reinitializationProcess == 0 || reinitializationProcess == 2 ||
+        reinitializationProcess == 3) {
+      bool tempbool = warningLED;
+      warningLED = true;
+      blynk(200);
+      warningLED = tempbool;
+    }
+    if (reinitializationProcess == 1 || reinitializationProcess == 3) {
+      beep();
+    }
+    if (reinitializationProcess == 0 || reinitializationProcess == 1)
+      array[pos / display_reading_after] = (dist / 2.54);
+  }
 }
