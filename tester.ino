@@ -427,12 +427,15 @@ void distanceChangeHandler(int *array, int dist, int arrNum) {
   //      array[pos / display_reading_after] - neglectableDistance) &&
   //     (((int)(dist / 2.54) >=
   //       array[pos / display_reading_after] + neglectableDistance)))
-  if ((int)(dist / 2.54) >=
-      array[pos / display_reading_after] - neglectableDistance) {
+  if (!(((int)(dist / 2.54)) >=
+          array[pos / display_reading_after] - neglectableDistance &&
+      ((int)(dist / 2.54)) <=
+          array[pos / display_reading_after] + neglectableDistance)) {
     Serial.println("Distance changed across Sensor " + String(arrNum) + " !");
+    Serial.println("array[pos / display_reading_after]");
     Serial.println(
         "Previous distance : " + String(array[pos / display_reading_after]) +
-        " New distance : " + String(dist / 2.54) +
+        " New distance : " + String((int)(dist / 2.54)) +
         " At Angle : " + String(pos));
     if (reinitializationProcess == 0 || reinitializationProcess == 2 ||
         reinitializationProcess == 3) {
