@@ -171,6 +171,7 @@ void inputHandler(int choice) {
     } else if (choice == 98) {
       digitalWrite(warning_zone_Led, HIGH);
     }
+    readyState = true;
   } else if (choice == 26 || choice == 980) {
     if (choice == 26) {
       servo_Rotaion = 2;
@@ -187,6 +188,7 @@ void inputHandler(int choice) {
         beep_lite(3);
       }
     }
+    readyState = true;
   } else if (choice == 23) {
     readyState = 1;
   }
@@ -209,7 +211,7 @@ void setup() {
   pinMode(echoPin2, INPUT);  // Sets the echoPin as an INPUT
   Serial.begin(9600);
   if (servo_Rotaion < 2 && readyState) {
-    Serial.println("Code#2");
+    Serial.println("Code#3");
     readyState = false;
   }
   // Serial.println("with Arduino UNO R3");
@@ -316,16 +318,16 @@ void update_distance(bool check) {
 
   if (servo_Rotaion == 2) {
     if (readyState) {
-      Serial.print("D1 : ");
+      Serial.print("D1 : $");
       Serial.print(distance / 2.54);
-      Serial.println(" in");
+      Serial.println("$ in");
       readyState = false;
     }
   } else if (servo_Rotaion == 4) {
     if (readyState) {
-      Serial.print(", D2 : ");
+      Serial.print(", D2 : $");
       Serial.print(distance2 / 2.54);
-      Serial.println(" in");
+      Serial.println("$ in");
       readyState = false;
     }
   } else {
