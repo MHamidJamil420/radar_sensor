@@ -1,3 +1,7 @@
 {
-    "port": "COM11"
+    "port": "COM11",
+    "configuration": "cpu=atmega328",
+    "board": "arduino:avr:nano",
+    "programmer": "arduino:avrisp",
+    "sketch": "with_python\\arduino_with_python_openCV.ino"
 }
