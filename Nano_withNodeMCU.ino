@@ -2,7 +2,9 @@
 #include <Servo.h>
 Servo Myservo;
 #include <SoftwareSerial.h>
-SoftwareSerial espSerial(5, 6);
+SoftwareSerial espSerial(7, 8);
+bool dataEnterd = false;
+String readString;
 int pos;
 bool ArraysInitialized = false;
 bool warningLED = false;
@@ -26,7 +28,7 @@ int rotation_speed_delay = 30; // angle (++ or --) after (rotation_speed)ms
 int warning_zone = 50;
 int warning_zone_Led = 6;
 
-int softMargin = 1;
+int softMargin = 2;
 // deny 1 inch movment
 
 int alarm_time = 2000;
@@ -46,6 +48,7 @@ long duration2; // variable for the duration of sound wave travel
 int distance2;  // variable for the distance measurement
 // ultrasound end
 bool Node_MCU_Mode = true;
+bool previous_clear = false;
 
 void inputHandler(int choice) {
   Serial.println("input Handler call");
@@ -134,6 +137,57 @@ void inputHandler(int choice) {
   Serial.println("Handler out");
 }
 
+void WaitFor(String check) {
+  bool condition = true;
+  while (condition) {
+    while (espSerial.available() >= 1) {
+      char c = espSerial.read(); // gets one byte from serial buffer
+      if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+          (c >= '0' && c <= '9')) {
+        readString += c; // makes the String readString
+      }
+      delay(2); // slow looping to allow buffer to fill with next character
+    }
+    if (readString == check) {
+      condition = false;
+    } else {
+      Serial.println("we got : " + readString + " :( ");
+      delay(100);
+    }
+  }
+}
+
+//==============================================================//
+void refine_value(String tempString) {
+  // Serial.println("String working on : " + tempString);
+  char tempChar[(tempString.length()) + 1];
+  tempString.toCharArray(tempChar, (tempString.length()) + 1);
+  int i;
+  String returnString;
+  int writedState = 0;
+  if (tempChar[0] != 'P') {
+    // its not our string
+    Serial.println("unknow string!");
+  } else {
+    Serial.println("Working fine...");
+    //   for (i = 1; i < ((tempString.length()) + 1) && tempChar[i] != '~'; i++)
+    //   {
+    //     if (tempChar[i] == ':') {
+    //       writedState++;
+    //     }
+    //     if (tempChar[i] >= '0' && tempChar[i] <= '9') {
+    //       if (writedState == 1) {
+    //         US1_reading += (int)tempChar[i];
+    //         US1_reading *= 10;
+    //       } else if (writedState == 2) {
+    //         US2_reading += (int)tempChar[i];
+    //         US2_reading *= 10;
+    //       }
+    //     }
+    //   }
+  }
+}
+//==============================================================//
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   Myservo.attach(2);
@@ -149,12 +203,21 @@ void setup() {
 }
 
 void loop() {
-  if (Serial.available() >= 1) {
-    choice = Serial.parseInt();
-    if (choice >= 1) {
-      inputHandler(choice);
-    }
+  while (espSerial.available()) {
+    char c = espSerial.read(); // gets one byte from serial buffer
+    readString += c;           // makes the String readString
+    delay(2); // slow looping to allow buffer to fill with next character
+    dataEnterd = true;
   }
+  if (dataEnterd) {
+    if (!(dataEnterd == "Pass1")) {
+      previous_clear = true;
+    } else {
+      refine_value(readString);
+    }
+    dataEnterd = false;
+  }
+  Serial.flush();
   if (!Node_MCU_Mode) {
     //........................ blocking main part for new starup
 
@@ -192,14 +255,22 @@ void loop() {
     distance2 = duration2 * 0.034 / 2;
     distance2 = distance2 / 2.54;
 
-    if (global_hc_1_reading != distance || global_hc_2_reading != distance2) {
-      Serial.println("-->> D1:" + String(distance) + "D2:" + String(distance2));
-      espSerial.println("D1:" + String(distance) + "D2:" + String(distance2) +
-                        "~");
+    if (((distance >= global_hc_1_reading - softMargin) &&
+         (distance <= global_hc_1_reading + softMargin)) ||
+        ((distance2 >= global_hc_2_reading - softMargin) &&
+         (distance2 <= global_hc_2_reading + softMargin))) {
+      Serial.println(" -->> D1:  " + String(distance) +
+                     ",  D2:  " + String(distance2));
+      espSerial.flush();
+      Serial.flush();
+      espSerial.println("x" + String(distance) + "y" + String(distance2) + "~");
+
+      delay(100);
       global_hc_1_reading = distance;
       global_hc_2_reading = distance2;
+      // WaitFor("Pass1");
     }
-    delay(300);
+    delay(1500);
     // Serial.print("D1 : ");
     // Serial.print(distance / 2.54);
     // Serial.print(", D2 : ");
