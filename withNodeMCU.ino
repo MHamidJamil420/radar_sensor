@@ -1,12 +1,15 @@
-// servo start
 
 #include <Servo.h>
 Servo Myservo;
+#include <SoftwareSerial.h>
+SoftwareSerial espSerial(5, 6);
 int pos;
 bool ArraysInitialized = false;
 bool warningLED = false;
 bool BuzzerBeeping = true;
 bool servo_Rotaion = true;
+int global_hc_1_reading = 0;
+int global_hc_2_reading = 0;
 int d1[19];
 int d2[19];
 // servo end
@@ -22,6 +25,9 @@ int rotation_speed_delay = 30; // angle (++ or --) after (rotation_speed)ms
 
 int warning_zone = 50;
 int warning_zone_Led = 6;
+
+int softMargin = 1;
+// deny 1 inch movment
 
 int alarm_time = 2000;
 int temp_alrm_time = alarm_time;
@@ -39,6 +45,7 @@ int distance;  // variable for the distance measurement
 long duration2; // variable for the duration of sound wave travel
 int distance2;  // variable for the distance measurement
 // ultrasound end
+bool Node_MCU_Mode = true;
 
 void inputHandler(int choice) {
   Serial.println("input Handler call");
@@ -126,6 +133,7 @@ void inputHandler(int choice) {
   choice = 0;
   Serial.println("Handler out");
 }
+
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   Myservo.attach(2);
@@ -136,12 +144,10 @@ void setup() {
 
   pinMode(trigPin2, OUTPUT); // Sets the trigPin as an OUTPUT
   pinMode(echoPin2, INPUT);  // Sets the echoPin as an INPUT
-  Serial.begin(
-      9600); // // Serial Communication is starting with 9600 of baudrate speed
-  Serial.println(
-      "Ultrasonic Sensor HC-SR04 Test"); // print some text in Serial Monitor
-  Serial.println("with Arduino UNO R3");
+  Serial.begin(115200);
+  espSerial.begin(115200);
 }
+
 void loop() {
   if (Serial.available() >= 1) {
     choice = Serial.parseInt();
@@ -149,13 +155,57 @@ void loop() {
       inputHandler(choice);
     }
   }
-  servoRotation();
-  // Clears the trigPin condition
-  update_distance(false);
+  if (!Node_MCU_Mode) {
+    //........................ blocking main part for new starup
 
-  //  check_warning_distance();
-  //  check_critical_distance();2
-  temp_alrm_time = alarm_time;
+    //   servoRotation();
+
+    //........................ servo rotation is blocked
+
+    // Clears the trigPin condition
+    update_distance(false);
+
+    //  check_warning_distance();
+    //  check_critical_distance();2
+
+    //================================================================
+
+    temp_alrm_time = alarm_time;
+
+    //================================================================
+  } else {
+    digitalWrite(trigPin, LOW);
+    delayMicroseconds(2);
+    digitalWrite(trigPin, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trigPin, LOW);
+    duration = pulseIn(echoPin, HIGH);
+    distance = duration * 0.034 / 2;
+    distance = distance / 2.54;
+
+    digitalWrite(trigPin2, LOW);
+    delayMicroseconds(2);
+    digitalWrite(trigPin2, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trigPin2, LOW);
+    duration2 = pulseIn(echoPin2, HIGH);
+    distance2 = duration2 * 0.034 / 2;
+    distance2 = distance2 / 2.54;
+
+    if (global_hc_1_reading != distance || global_hc_2_reading != distance2) {
+      Serial.println("-->> D1:" + String(distance) + "D2:" + String(distance2));
+      espSerial.println("D1:" + String(distance) + "D2:" + String(distance2) +
+                        "~");
+      global_hc_1_reading = distance;
+      global_hc_2_reading = distance2;
+    }
+    delay(300);
+    // Serial.print("D1 : ");
+    // Serial.print(distance / 2.54);
+    // Serial.print(", D2 : ");
+    // Serial.print(distance2 / 2.54);
+    // Serial.println(" in");
+  }
 }
 void servoRotation() {
 
@@ -210,14 +260,14 @@ void servoRotation() {
     int ijk = 0;
     Serial.print("D1 : ");
     for (; ijk < 18; ijk++) {
-      Serial.print(String(d1[ijk])+",");
+      Serial.print(String(d1[ijk]) + ",");
     }
     Serial.println("");
 
     ijk = 0;
     Serial.print("D2 : ");
     for (; ijk < 18; ijk++) {
-      Serial.print(String(d2[ijk])+",");
+      Serial.print(String(d2[ijk]) + ",");
     }
     Serial.println("");
   }
