@@ -1,10 +1,13 @@
 
 #include <Servo.h>
 Servo Myservo;
+
 #include <SoftwareSerial.h>
 SoftwareSerial espSerial(7, 8);
+
 bool dataEnterd = false;
 String readString;
+
 int pos;
 bool ArraysInitialized = false;
 bool warningLED = false;
@@ -193,6 +196,7 @@ void setup() {
   Myservo.attach(2);
   pinMode(warning_zone_Led, OUTPUT);
   pinMode(critical_zone_buzzer, OUTPUT);
+  
   pinMode(trigPin, OUTPUT); // Sets the trigPin as an OUTPUT
   pinMode(echoPin, INPUT);  // Sets the echoPin as an INPUT
 
