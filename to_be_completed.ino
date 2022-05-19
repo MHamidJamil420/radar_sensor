@@ -4,7 +4,7 @@
 Servo Myservo;
 int pos;
 bool ArraysInitialized = false;
-bool warningLED = false;
+bool warningLED = true;
 bool BuzzerBeeping = false;
 bool servo_Rotaion = true;
 int d1[19];
@@ -172,9 +172,7 @@ void setup()
   pinMode(echoPin2, INPUT);  // Sets the echoPin as an INPUT
   Serial.begin(
       9600);
-  Serial.println(
-      "Ultrasonic Sensor HC-SR04 Test"); // print some text in Serial Monitor
-  Serial.println("with Arduino UNO R3");
+  Serial.println("Code#5");
 }
 void loop()
 {
@@ -200,7 +198,6 @@ void loop()
 void servoRotation()
 {
 
- 
   for (pos = 0; pos <= 180; pos++)
   {
     if (Serial.available() >= 1)
@@ -213,8 +210,8 @@ void servoRotation()
     }
     // if (servo_Rotaion)
     // {
-      Myservo.write(pos);
-      delay(rotation_speed_delay);
+    Myservo.write(pos);
+    delay(rotation_speed_delay);
     // }
     if (pos % display_reading_after == 0)
     {
@@ -239,8 +236,8 @@ void servoRotation()
     }
     // if (servo_Rotaion)
     // {
-      Myservo.write(pos);
-      delay(rotation_speed_delay);
+    Myservo.write(pos);
+    delay(rotation_speed_delay);
     // }
     if (pos % display_reading_after == 0)
     {
@@ -259,7 +256,7 @@ void servoRotation()
 
     int ijk = 0;
     Serial.print("D1 : ");
-    for (; ijk < 18; ijk++)
+    for (; ijk < (180 / display_reading_after); ijk++)
     {
       Serial.print(String(d1[ijk]) + ",");
     }
@@ -267,7 +264,7 @@ void servoRotation()
 
     ijk = 0;
     Serial.print("D2 : ");
-    for (; ijk < 18; ijk++)
+    for (; ijk < (180 / display_reading_after); ijk++)
     {
       Serial.print(String(d2[ijk]) + ",");
     }
@@ -353,10 +350,9 @@ void beep()
 }
 void blynk(int defined_delay)
 {
-  digitalWrite(LED_BUILTIN,
-               HIGH);             // turn the LED on (HIGH is the voltage level)
-  delay(defined_delay);           // wait for a second
-  digitalWrite(LED_BUILTIN, LOW); // turn the LED off by making the voltage LOW
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(defined_delay);
+  digitalWrite(LED_BUILTIN, LOW);
   // delay(1000);
   if (warningLED)
   {

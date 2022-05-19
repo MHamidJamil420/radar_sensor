@@ -2,6 +2,6 @@
     "port": "COM6",
     "configuration": "cpu=atmega328",
     "board": "arduino:avr:nano",
-    "programmer": "arduino:avrisp",
+    "programmer": "arduino:avrispmkii",
     "sketch": "with_python\\arduino_with_python_openCV.ino"
 }
