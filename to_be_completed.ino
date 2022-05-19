@@ -17,7 +17,7 @@ int input_timeout = 10000;
 int critical_zone = 25;
 int critical_zone_buzzer = 4;
 
-int rotation_speed_delay = 30; // angle (++ or --) after (rotation_speed)ms
+int rotation_speed_delay = 70; // angle (++ or --) after (rotation_speed)ms
 // so increasing it will slow down rotation speed
 
 int warning_zone = 50;
@@ -25,7 +25,7 @@ int warning_zone_Led = 6;
 
 int alarm_time = 2000;
 int temp_alrm_time = alarm_time;
-int display_reading_after = 10; //  (180/display_reading_after) = x,(18)
+int display_reading_after = 30; //  (180/display_reading_after) = x,(18)
                                 //  so after 10 degree readings will be printed
 #define echoPin 12              //  attach pin D2 Arduino to pin Echo of HC-SR04
 #define trigPin 11              // attach pin D3 Arduino to pin Trig of HC-SR04
@@ -171,7 +171,7 @@ void setup()
   pinMode(trigPin2, OUTPUT); // Sets the trigPin as an OUTPUT
   pinMode(echoPin2, INPUT);  // Sets the echoPin as an INPUT
   Serial.begin(
-      9600); // // Serial Communication is starting with 9600 of baudrate speed
+      9600);
   Serial.println(
       "Ultrasonic Sensor HC-SR04 Test"); // print some text in Serial Monitor
   Serial.println("with Arduino UNO R3");
@@ -186,7 +186,10 @@ void loop()
       inputHandler(choice);
     }
   }
-  servoRotation();
+  if (servo_Rotaion)
+  {
+    servoRotation();
+  }
   // Clears the trigPin condition
   update_distance(false);
 
@@ -197,10 +200,7 @@ void loop()
 void servoRotation()
 {
 
-  if (servo_Rotaion)
-  {
-    delay(300);
-  }
+ 
   for (pos = 0; pos <= 180; pos++)
   {
     if (Serial.available() >= 1)
@@ -211,11 +211,11 @@ void servoRotation()
         inputHandler(choice);
       }
     }
-    if (servo_Rotaion)
-    {
+    // if (servo_Rotaion)
+    // {
       Myservo.write(pos);
       delay(rotation_speed_delay);
-    }
+    // }
     if (pos % display_reading_after == 0)
     {
       blynk(20);
@@ -226,10 +226,7 @@ void servoRotation()
       update_distance(true);
     }
   }
-  if (servo_Rotaion)
-  {
-    delay(300);
-  }
+
   for (pos = 180; pos >= 0; pos--)
   {
     if (Serial.available() >= 1)
@@ -240,11 +237,11 @@ void servoRotation()
         inputHandler(choice);
       }
     }
-    if (servo_Rotaion)
-    {
+    // if (servo_Rotaion)
+    // {
       Myservo.write(pos);
       delay(rotation_speed_delay);
-    }
+    // }
     if (pos % display_reading_after == 0)
     {
       blynk(20);
